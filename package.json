@@ -4,6 +4,14 @@
     "description": "Provides CodeLens support for running Ginkgo tests",
     "version": "0.0.1",
     "publisher": "selzoc",
+    "author": {
+        "name": "Chris Selzo"
+    },
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/selzoc/ginkgo-lens.git"
+    },
     "engines": {
         "vscode": "^1.13.0"
     },
@@ -11,14 +19,43 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.sayHello"
+        "onLanguage:go"
     ],
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [{
-            "command": "extension.sayHello",
-            "title": "Hello World"
-        }]
+        "commands": [
+            {
+                "command": "ginkgo.test.file",
+                "title": "Ginkgo: Test File",
+                "description": "Runs all ginkgo unit tests in the current file."
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Ginkgo Lens configuration",
+            "properties": {
+                "ginkgolens.ginkgoArgs": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Arguments to pass to ginkgo."
+                },
+                "ginkgolens.includeFile": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Support running all Ginkgo tests in a file."
+                },
+                "ginkgolens.includeDescribes": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Include Describe blocks in test detection."
+                },
+                "ginkgolens.includeIts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include It specs in test detection."
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
