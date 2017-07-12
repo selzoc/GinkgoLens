@@ -5,7 +5,6 @@ import * as vscode from 'vscode';
 import cp = require('child_process');
 import fs = require('fs');
 import path = require('path');
-import { getTestFunctions } from './ginkgoTestProvider';
 
 const ginkgoTestOutput = vscode.window.createOutputChannel('Ginkgo');
 
@@ -70,7 +69,7 @@ function ginkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, dir: string
 	});
 }
 
-function getGinkgoPath(): string {
+export function getGinkgoPath(): string {
 	const defaultPath = path.join(process.env['GOPATH'], 'bin', 'ginkgo');
 
 	if (fs.existsSync(defaultPath)) {

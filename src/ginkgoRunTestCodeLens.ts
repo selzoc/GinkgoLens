@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 
 import { CodeLensProvider, TextDocument, CancellationToken, CodeLens, Command } from 'vscode';
-import { GinkgoTestKind, getTestFunctions } from './ginkgoTestProvider';
+import { GinkgoTestKind, getTestFunctions, getTestFunctionsViaGinkgo } from './ginkgoTestProvider';
 
 export class GinkgoRunTestCodeLensProvider implements CodeLensProvider {
     public provideCodeLenses(document: TextDocument, token: CancellationToken): Thenable<CodeLens[]> {
@@ -18,8 +18,8 @@ export class GinkgoRunTestCodeLensProvider implements CodeLensProvider {
 
             if (ginkgoConfig.get<boolean>('includeFile'))
                 codeLenses = codeLenses.concat(res[0]);
-            if (ginkgoConfig.get<boolean>('includeDescribes'))
-                codeLenses = codeLenses.concat(res[1]);
+            // if (ginkgoConfig.get<boolean>('includeDescribes'))
+            //     codeLenses = codeLenses.concat(res[1]);
             if (ginkgoConfig.get<boolean>('includeIts'))
                 codeLenses = codeLenses.concat(res[2]);
 
@@ -50,7 +50,8 @@ export class GinkgoRunTestCodeLensProvider implements CodeLensProvider {
     }
 
     private getCodeLenesesForGinkgoTestKind(document: TextDocument, testKind: GinkgoTestKind): Thenable<CodeLens[]> {
-        return getTestFunctions(document, testKind)
+        // return getTestFunctions(document, testKind)
+        return getTestFunctionsViaGinkgo(document, testKind)
             .then(testFunctions =>
                 testFunctions.map(func =>
                     new CodeLens(
