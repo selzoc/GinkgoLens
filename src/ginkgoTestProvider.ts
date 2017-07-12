@@ -13,15 +13,15 @@ export enum GinkgoTestKind {
  * @param testKind type of tests to search for
  */
 export function getTestFunctions(doc: vscode.TextDocument, testKind: GinkgoTestKind): Thenable<vscode.SymbolInformation[]> {
-	let docText = doc.getText();
+	const docText = doc.getText();
 
-	let testIndices = getTestIndices(docText, testKind);
-	let testTitles = testIndices.map(i => getTestTitle(docText, testKind, i));
+	const testIndices = getTestIndices(docText, testKind);
+	const testTitles = testIndices.map(i => getTestTitle(docText, testKind, i));
 
-	let testSymbols: vscode.SymbolInformation[] = [];
+	const testSymbols: vscode.SymbolInformation[] = [];
 	for (var i in testIndices) {
-		let pos = doc.positionAt(testIndices[i]);
-		let loc = new vscode.Location(doc.uri, pos);
+		const pos = doc.positionAt(testIndices[i]);
+		const loc = new vscode.Location(doc.uri, pos);
 
 		testSymbols.push(
 			new vscode.SymbolInformation(
@@ -42,7 +42,7 @@ function getTestTitle(docText: string, testKind: GinkgoTestKind, index: number):
 		startQuote += 6;
 	}
 
-	let endQuote = docText.indexOf('"', startQuote);
+	const endQuote = docText.indexOf('"', startQuote);
 
 	return docText.substring(startQuote, endQuote);
 }
@@ -53,11 +53,11 @@ function getTestIndices(docText: string, testKind: GinkgoTestKind): number[] {
 		testString = "Describe(";
 	}
 
-	let indices = [];
-	let i = 0;
+	const indices = [];
 
+	let i = 0;
 	while (i !== -1) {
-		let loc = docText.indexOf(testString, i)
+		const loc = docText.indexOf(testString, i)
 		if (loc == -1) {
 			break;
 		}

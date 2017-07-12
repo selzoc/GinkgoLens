@@ -3,10 +3,11 @@
 import * as vscode from 'vscode';
 
 import cp = require('child_process');
+import fs = require('fs');
 import path = require('path');
 import { getTestFunctions } from './ginkgoTestProvider';
 
-let ginkgoTestOutput = vscode.window.createOutputChannel('Ginkgo');
+const ginkgoTestOutput = vscode.window.createOutputChannel('Ginkgo');
 
 /**
  * Runs ginkgo against the current file
@@ -44,12 +45,13 @@ function runGinkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, testFocu
 function ginkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, dir: string, focus?: string) {
 	return new Promise((resolve, reject) => {
 		const gingkoArgs = ginkgoLensConfig.get<string[]>('ginkgoArgs');
-		let args = [].concat(gingkoArgs);
+		const args = [].concat(gingkoArgs);
 
-		let ginkgooRuntimePath = getGinkgoPath();
+		const ginkgooRuntimePath = getGinkgoPath();
 		if (!ginkgooRuntimePath) {
-			vscode.window.showErrorMessage('Not able to find "ginkgo" binary. Update GOROOT, GOPATH, or PATH environment variables.');
+			vscode.window.showErrorMessage('Not able to find "ginkgo" binary in GOPATH');
 			reject('ginkgo binary not found');
+			return;
 		}
 
 		if (focus) {
@@ -59,14 +61,21 @@ function ginkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, dir: string
 		ginkgoTestOutput.clear();
 		ginkgoTestOutput.show(true);
 
-		let proc = cp.spawn(ginkgooRuntimePath, args, { cwd: dir, shell: true });
-		proc.stdout.on('data', chunk => ginkgoTestOutput.append(chunk.toString()));
-		proc.stderr.on('data', chunk => ginkgoTestOutput.append(chunk.toString()));
-		proc.on('close', () => resolve());
-		proc.on('error', err => reject(err));
+		const spawnedGinkgo = cp.spawn(ginkgooRuntimePath, args, { cwd: dir, shell: true });
+
+		spawnedGinkgo.on('error', err => reject(err));
+		spawnedGinkgo.stdout.on('data', chunk => ginkgoTestOutput.append(chunk.toString()));
+		spawnedGinkgo.stderr.on('data', chunk => ginkgoTestOutput.append(chunk.toString()));
+		spawnedGinkgo.on('close', () => resolve());
 	});
 }
 
 function getGinkgoPath(): string {
-	return path.join(process.env['GOPATH'], 'bin', 'ginkgo');
+	const defaultPath = path.join(process.env['GOPATH'], 'bin', 'ginkgo');
+
+	if (fs.existsSync(defaultPath)) {
+		return defaultPath;
+	}
+
+	return null;
 }
