@@ -57,11 +57,9 @@ function ginkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, dir: string
 		}
 
 		ginkgoTestOutput.clear();
-		ginkgoTestOutput.appendLine(['Running:', ginkgooRuntimePath, ...args].join(' '));
-		ginkgoTestOutput.appendLine('');
 		ginkgoTestOutput.show(true);
 
-		let proc = cp.spawn(ginkgooRuntimePath, args, { cwd: dir });
+		let proc = cp.spawn(ginkgooRuntimePath, args, { cwd: dir, shell: true });
 		proc.stdout.on('data', chunk => ginkgoTestOutput.append(chunk.toString()));
 		proc.stderr.on('data', chunk => ginkgoTestOutput.append(chunk.toString()));
 		proc.on('close', () => resolve());
