@@ -13,12 +13,12 @@ export class GinkgoRunTestCodeLensProvider implements CodeLensProvider {
             this.getCodeLensesForFile(document),
             this.getCodeLensesForIts(document)
         ]).then(res => {
-            let codeLenses: CodeLens[] = [];
+            const codeLenses: CodeLens[] = [];
 
             if (ginkgoConfig.get<boolean>('includeFile'))
-                codeLenses = codeLenses.concat(res[0])
+                codeLenses.push(...res[0])
             if (ginkgoConfig.get<boolean>('includeIts'))
-                codeLenses = codeLenses.concat(res[1]);
+                codeLenses.push(...res[1]);
 
             return codeLenses;
         });
