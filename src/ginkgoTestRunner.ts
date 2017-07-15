@@ -7,14 +7,30 @@ import fs = require('fs');
 import path = require('path');
 
 const ginkgoTestOutput = vscode.window.createOutputChannel('Ginkgo');
+const DirtyFileMessage = 'File has unsaved changes, please save and try again.';
 
 /**
  * Runs ginkgo against the current file
  * @param ginkgoLensConfig ginkgolens vscode config section
- * @param args args passed to the invocation of the command
+ * @param args args passed to the invocation of the command - we assume it has a 'path' key
  */
 export function runGinkgoTestsForFile(ginkgoLensConfig: vscode.WorkspaceConfiguration, args: any) {
-	return runGinkgoTest(ginkgoLensConfig);
+	if (args && args.path) {
+		if (!args.path.endsWith('_test.go')) {
+			vscode.window.showWarningMessage('Not a go test file (must end in "_test.go")');
+			return
+		}
+
+		const doc = vscode.workspace.textDocuments.find((doc) => doc.uri.path == args.path);
+		if (doc.isDirty) {
+			vscode.window.showWarningMessage(DirtyFileMessage);
+			return
+		}
+
+		return ginkgoTest(ginkgoLensConfig, path.dirname(doc.fileName), args.path);
+	}
+
+	console.log('oops no conditionals matched!')
 }
 
 /**
@@ -24,30 +40,27 @@ export function runGinkgoTestsForFile(ginkgoLensConfig: vscode.WorkspaceConfigur
  */
 export function runFocusedGinkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, args: any) {
 	if (args && args.testFocus) {
-		return runGinkgoTest(ginkgoLensConfig, args.testFocus);
-	} else {
-		vscode.window.showInformationMessage('No test function found at cursor.');
-		return;
-	}
-}
+		const editor = vscode.window.activeTextEditor;
+		if (editor.document.isDirty) {
+			vscode.window.showWarningMessage(DirtyFileMessage);
+			return;
+		}
 
-function runGinkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, testFocus?: string) {
-	const editor = vscode.window.activeTextEditor;
-	if (editor.document.isDirty) {
-		vscode.window.showWarningMessage('File has unsaved changes, please save and try again.');
-		return;
+		const focusWithFile = `${args.testFocus} ${editor.document.fileName}`;
+
+		return ginkgoTest(ginkgoLensConfig, path.dirname(editor.document.fileName), args.testFocus);
 	}
 
-	return ginkgoTest(ginkgoLensConfig, path.dirname(editor.document.fileName), testFocus);
+	vscode.window.showInformationMessage('No test function found at cursor.');
 }
 
 function ginkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, dir: string, focus?: string) {
 	return new Promise((resolve, reject) => {
 		const gingkoArgs = ginkgoLensConfig.get<string[]>('ginkgoArgs');
-		const args = [].concat(gingkoArgs);
+		const args = ['-regexScansFilePath'].concat(gingkoArgs);
 
-		const ginkgooRuntimePath = getGinkgoPath();
-		if (!ginkgooRuntimePath) {
+		const ginkgoRuntimePath = getGinkgoPath();
+		if (!ginkgoRuntimePath) {
 			vscode.window.showErrorMessage('Not able to find "ginkgo" binary in GOPATH');
 			reject('ginkgo binary not found');
 			return;
@@ -60,8 +73,11 @@ function ginkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, dir: string
 		ginkgoTestOutput.clear();
 		ginkgoTestOutput.show(true);
 
-		const spawnedGinkgo = cp.spawn(ginkgooRuntimePath, args, { cwd: dir, shell: true });
+		if (ginkgoLensConfig.get<boolean>('showCommand')) {
+			ginkgoTestOutput.appendLine(`Running command: ${ginkgoRuntimePath} ${args.join(' ')}\n`)
+		}
 
+		const spawnedGinkgo = cp.spawn(ginkgoRuntimePath, args, { cwd: dir, shell: true });
 		spawnedGinkgo.on('error', err => reject(err));
 		spawnedGinkgo.stdout.on('data', chunk => ginkgoTestOutput.append(chunk.toString()));
 		spawnedGinkgo.stderr.on('data', chunk => ginkgoTestOutput.append(chunk.toString()));
@@ -69,6 +85,9 @@ function ginkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, dir: string
 	});
 }
 
+/**
+ * Returns the absolute path of the ginkgo executable on the system
+ */
 export function getGinkgoPath(): string {
 	const defaultPath = path.join(process.env['GOPATH'], 'bin', 'ginkgo');
 

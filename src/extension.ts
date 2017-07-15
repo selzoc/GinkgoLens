@@ -18,6 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
         const ginkgoLensConfig = vscode.workspace.getConfiguration('ginkgolens');
         runGinkgoTestsForFile(ginkgoLensConfig, args);
     }));
+
     context.subscriptions.push(vscode.commands.registerCommand('ginkgo.test.focus', (args) => {
         const ginkgoLensConfig = vscode.workspace.getConfiguration('ginkgolens');
         runFocusedGinkgoTest(ginkgoLensConfig, args);

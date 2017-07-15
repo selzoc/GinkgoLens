@@ -7,6 +7,10 @@
     "author": {
         "name": "Chris Selzo"
     },
+    "categories": [
+        "Languages",
+        "Other"
+    ],
     "private": true,
     "repository": {
         "type": "git",
@@ -15,9 +19,6 @@
     "engines": {
         "vscode": "^1.13.0"
     },
-    "categories": [
-        "Other"
-    ],
     "activationEvents": [
         "onLanguage:go"
     ],
@@ -30,29 +31,38 @@
                 "description": "Runs all ginkgo unit tests in the current file."
             }
         ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "when": "resourceLangId == go",
+                    "command": "ginkgo.test.file",
+                    "group": "2_test"
+                }
+            ]
+        },
         "configuration": {
             "type": "object",
             "title": "Ginkgo Lens configuration",
             "properties": {
-                "ginkgolens.ginkgoArgs": {
+                "ginkgolens.args": {
                     "type": "array",
                     "default": [],
                     "description": "Arguments to pass to ginkgo."
                 },
+                "ginkgolens.showCommand": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Display the ginkgo command in the test output."
+                },
                 "ginkgolens.includeFile": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Support running all Ginkgo tests in a file."
-                },
-                "ginkgolens.includeDescribes": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Include Describe blocks in test detection."
+                    "description": "Show CodeLens for test files."
                 },
                 "ginkgolens.includeIts": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Include It specs in test detection."
+                    "description": "Show CodeLens for It specs."
                 }
             }
         }

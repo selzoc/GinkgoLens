@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 
 import { CodeLensProvider, TextDocument, CancellationToken, CodeLens, Command } from 'vscode';
-import { GinkgoTestKind, getTestFunctions, getTestFunctionsViaGinkgo } from './ginkgoTestProvider';
+import { getTestSpecs } from './ginkgoSpecProvider';
 
 export class GinkgoRunTestCodeLensProvider implements CodeLensProvider {
     public provideCodeLenses(document: TextDocument, token: CancellationToken): Thenable<CodeLens[]> {
@@ -11,47 +11,40 @@ export class GinkgoRunTestCodeLensProvider implements CodeLensProvider {
 
         return Promise.all([
             this.getCodeLensesForFile(document),
-            this.getCodeLensesForDescribes(document),
             this.getCodeLensesForIts(document)
         ]).then(res => {
             let codeLenses: CodeLens[] = [];
 
             if (ginkgoConfig.get<boolean>('includeFile'))
-                codeLenses = codeLenses.concat(res[0]);
-            // if (ginkgoConfig.get<boolean>('includeDescribes'))
-            //     codeLenses = codeLenses.concat(res[1]);
+                codeLenses = codeLenses.concat(res[0])
             if (ginkgoConfig.get<boolean>('includeIts'))
-                codeLenses = codeLenses.concat(res[2]);
+                codeLenses = codeLenses.concat(res[1]);
 
             return codeLenses;
         });
     }
 
     private getCodeLensesForFile(document: TextDocument): Thenable<CodeLens[]> {
+        if (document.fileName.endsWith('_suite_test.go')) {
+            return Promise.resolve([]);
+        }
+
         const topOfFile = new vscode.Range(0, 0, 0, 0);
 
         return Promise.resolve([
             new CodeLens(
                 topOfFile,
                 {
-                    title: 'run file tests using ginkgo',
-                    command: 'ginkgo.test.file'
+                    title: 'run file tests with ginkgo',
+                    command: 'ginkgo.test.file',
+                    arguments: [{ path: document.uri.fsPath }]
                 }
             )
         ]);
     }
 
-    private getCodeLensesForDescribes(document: TextDocument): Thenable<CodeLens[]> {
-        return this.getCodeLenesesForGinkgoTestKind(document, GinkgoTestKind.Describe);
-    }
-
     private getCodeLensesForIts(document: TextDocument): Thenable<CodeLens[]> {
-        return this.getCodeLenesesForGinkgoTestKind(document, GinkgoTestKind.It);
-    }
-
-    private getCodeLenesesForGinkgoTestKind(document: TextDocument, testKind: GinkgoTestKind): Thenable<CodeLens[]> {
-        // return getTestFunctions(document, testKind)
-        return getTestFunctionsViaGinkgo(document, testKind)
+        return getTestSpecs(document)
             .then(testFunctions =>
                 testFunctions.map(func =>
                     new CodeLens(
