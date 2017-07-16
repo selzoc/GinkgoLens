@@ -16,13 +16,11 @@ interface Spec {
 	location: vscode.Location;
 }
 
-export function getTestSpecs(doc: vscode.TextDocument): Thenable<Spec[]> {
-	return new Promise((resolve, reject) => {
+export async function getTestSpecs(doc: vscode.TextDocument): Promise<Spec[]> {
 		const ginkgooRuntimePath = getGinkgoPath();
 		if (!ginkgooRuntimePath) {
 			vscode.window.showErrorMessage('Not able to find "ginkgo" binary in GOPATH');
-			reject();
-			return;
+			return [];
 		}
 
 		const dir = path.dirname(doc.fileName);
@@ -33,17 +31,15 @@ export function getTestSpecs(doc: vscode.TextDocument): Thenable<Spec[]> {
 		);
 
 		if (spawnedGinkgo.status !== 0) {
-			reject('ginkgo exit code error');
-			return;
+			return [];
 		}
 
-		resolve(getSpecsFromOutput(spawnedGinkgo.stdout.toString(), doc));
-	});
+		return await getSpecsFromOutput(spawnedGinkgo.stdout.toString(), doc);
 }
 
-function getSpecsFromOutput(output: string, doc: vscode.TextDocument): Spec[] {
+async function getSpecsFromOutput(output: string, doc: vscode.TextDocument): Promise<Spec[]> {
 	const specLines = output.split('\n').filter(ginkgoOutputFilter).map(s => s.trim());
-	const specIndices = getTestIndices(doc.getText(), GinkgoTestKind.It);
+	const specIndices = await getTestIndices(doc.getText(), GinkgoTestKind.It);
 
 	const specs: Spec[] = [];
 	for (let i = 0; i < specLines.length; i += 3) {
@@ -77,7 +73,7 @@ function ginkgoOutputFilter(line: string): boolean {
 	return true;
 }
 
-function getTestIndices(docText: string, testKind: GinkgoTestKind): number[] {
+async function getTestIndices(docText: string, testKind: GinkgoTestKind): Promise<number[]> {
 	let testString = 'It(';
 	if (testKind === GinkgoTestKind.Describe) {
 		testString = 'Describe(';
