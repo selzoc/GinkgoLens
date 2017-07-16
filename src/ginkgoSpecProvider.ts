@@ -6,17 +6,17 @@ import cp = require('child_process');
 import path = require('path')
 import { getGinkgoPath } from './ginkgoTestRunner'
 
-export enum GinkgoTestKind {
+enum GinkgoTestKind {
 	Describe = 0,
 	It = 1
 }
 
 interface Spec {
-	ConcatenatedString: string;
-	Location: vscode.Location;
+	fullSpecString: string;
+	location: vscode.Location;
 }
 
-export function getTestSpecs(doc: vscode.TextDocument): Thenable<vscode.SymbolInformation[]> {
+export function getTestSpecs(doc: vscode.TextDocument): Thenable<Spec[]> {
 	return new Promise((resolve, reject) => {
 		const ginkgooRuntimePath = getGinkgoPath();
 		if (!ginkgooRuntimePath) {
@@ -37,14 +37,7 @@ export function getTestSpecs(doc: vscode.TextDocument): Thenable<vscode.SymbolIn
 			return;
 		}
 
-		const specs = getSpecsFromOutput(spawnedGinkgo.stdout.toString(), doc);
-		resolve(specs.map(s =>
-			new vscode.SymbolInformation(
-				s.ConcatenatedString,
-				vscode.SymbolKind.Function,
-				`${path.basename(doc.fileName)}`,
-				s.Location
-			)));
+		resolve(getSpecsFromOutput(spawnedGinkgo.stdout.toString(), doc));
 	});
 }
 
@@ -55,8 +48,8 @@ function getSpecsFromOutput(output: string, doc: vscode.TextDocument): Spec[] {
 	const specs: Spec[] = [];
 	for (let i = 0; i < specLines.length; i += 3) {
 		specs.push({
-			ConcatenatedString: `${specLines[i]} ${specLines[i + 1]} ${specLines[i + 2].split(':')[0]}`,
-			Location: new vscode.Location(doc.uri, doc.positionAt(specIndices[i / 3]))
+			fullSpecString: `${specLines[i]} ${specLines[i + 1]} ${specLines[i + 2].split(':')[0]}`,
+			location: new vscode.Location(doc.uri, doc.positionAt(specIndices[i / 3]))
 		});
 	}
 

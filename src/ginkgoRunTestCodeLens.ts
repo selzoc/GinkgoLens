@@ -49,7 +49,7 @@ export class GinkgoRunTestCodeLensProvider implements vscode.CodeLensProvider {
                         {
                             title: 'run test',
                             command: 'ginkgo.test.focus',
-                            arguments: [{ testFocus: spec.name }]
+                            arguments: [{ testFocus: spec.fullSpecString }]
                         }
                     )
                 )

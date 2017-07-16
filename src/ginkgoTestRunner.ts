@@ -51,7 +51,7 @@ export function runFocusedGinkgoTest(ginkgoLensConfig: vscode.WorkspaceConfigura
 		return ginkgoTest(ginkgoLensConfig, path.dirname(editor.document.fileName), args.testFocus);
 	}
 
-	vscode.window.showInformationMessage('No test function found at cursor.');
+	vscode.window.showInformationMessage('No test function found.');
 }
 
 function ginkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, dir: string, focus?: string) {
