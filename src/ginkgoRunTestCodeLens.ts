@@ -2,18 +2,17 @@
 
 import * as vscode from 'vscode';
 
-import { CodeLensProvider, TextDocument, CancellationToken, CodeLens, Command } from 'vscode';
 import { getTestSpecs } from './ginkgoSpecProvider';
 
-export class GinkgoRunTestCodeLensProvider implements CodeLensProvider {
-    public provideCodeLenses(document: TextDocument, token: CancellationToken): Thenable<CodeLens[]> {
+export class GinkgoRunTestCodeLensProvider implements vscode.CodeLensProvider {
+    public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Thenable<vscode.CodeLens[]> {
         const ginkgoConfig = vscode.workspace.getConfiguration('ginkgolens');
 
         return Promise.all([
             this.getCodeLensesForFile(document),
             this.getCodeLensesForIts(document)
         ]).then(res => {
-            const codeLenses: CodeLens[] = [];
+            const codeLenses: vscode.CodeLens[] = [];
 
             if (ginkgoConfig.get<boolean>('includeFile'))
                 codeLenses.push(...res[0])
@@ -24,16 +23,14 @@ export class GinkgoRunTestCodeLensProvider implements CodeLensProvider {
         });
     }
 
-    private getCodeLensesForFile(document: TextDocument): Thenable<CodeLens[]> {
+    private getCodeLensesForFile(document: vscode.TextDocument): Thenable<vscode.CodeLens[]> {
         if (document.fileName.endsWith('_suite_test.go')) {
             return Promise.resolve([]);
         }
 
-        const topOfFile = new vscode.Range(0, 0, 0, 0);
-
         return Promise.resolve([
-            new CodeLens(
-                topOfFile,
+            new vscode.CodeLens(
+                new vscode.Range(0, 0, 0, 0),
                 {
                     title: 'run file tests with ginkgo',
                     command: 'ginkgo.test.file',
@@ -43,16 +40,16 @@ export class GinkgoRunTestCodeLensProvider implements CodeLensProvider {
         ]);
     }
 
-    private getCodeLensesForIts(document: TextDocument): Thenable<CodeLens[]> {
+    private getCodeLensesForIts(document: vscode.TextDocument): Thenable<vscode.CodeLens[]> {
         return getTestSpecs(document)
-            .then(testFunctions =>
-                testFunctions.map(func =>
-                    new CodeLens(
-                        func.location.range,
+            .then(testSpecs =>
+                testSpecs.map(spec =>
+                    new vscode.CodeLens(
+                        spec.location.range,
                         {
                             title: 'run test',
                             command: 'ginkgo.test.focus',
-                            arguments: [{ testFocus: func.name }]
+                            arguments: [{ testFocus: spec.name }]
                         }
                     )
                 )

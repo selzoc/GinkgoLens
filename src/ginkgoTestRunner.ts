@@ -36,11 +36,11 @@ export function runGinkgoTestsForFile(ginkgoLensConfig: vscode.WorkspaceConfigur
 /**
  * Runs ginkgo against the specified test
  * @param ginkgoLensConfig ginkgolens vscode config section
+ * @param editor the editor containing the document in which the test resides
  * @param args args passed to the invocation of the command
  */
-export function runFocusedGinkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, args: any) {
+export function runFocusedGinkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, editor: vscode.TextEditor, args: any) {
 	if (args && args.testFocus) {
-		const editor = vscode.window.activeTextEditor;
 		if (editor.document.isDirty) {
 			vscode.window.showWarningMessage(DirtyFileMessage);
 			return;
