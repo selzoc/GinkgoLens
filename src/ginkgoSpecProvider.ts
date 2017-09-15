@@ -17,15 +17,15 @@ interface Spec {
 }
 
 export async function getTestSpecs(doc: vscode.TextDocument): Promise<Spec[]> {
-	const ginkgooRuntimePath = getGinkgoPath();
-	if (!ginkgooRuntimePath) {
+	const ginkgoRuntimePath = getGinkgoPath();
+	if (!ginkgoRuntimePath) {
 		vscode.window.showErrorMessage('Not able to find "ginkgo" binary in GOPATH');
 		return [];
 	}
 
 	const dir = path.dirname(doc.fileName);
 	const spawnedGinkgo = cp.spawnSync(
-		ginkgooRuntimePath,
+		ginkgoRuntimePath,
 		['-regexScansFilePath', '-noisyPendings=false', '-noColor', '-dryRun', '-v', `-focus="${doc.fileName}"`],
 		{ cwd: dir, shell: true }
 	);
