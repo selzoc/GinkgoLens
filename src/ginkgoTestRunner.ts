@@ -86,10 +86,17 @@ function ginkgoTest(ginkgoLensConfig: vscode.WorkspaceConfiguration, dir: string
 }
 
 /**
- * Returns the absolute path of the ginkgo executable on the system
+ * Returns the absolute path of the ginkgo executable on the system, rooted at
+ * either go.toolsGopath or defaulting to $GOPATH
+ *
  */
 export function getGinkgoPath(): string {
-	const defaultPath = path.join(process.env['GOPATH'], 'bin', 'ginkgo');
+	var toolsGopath = vscode.workspace.getConfiguration('go').get<string>('toolsGopath');
+	if (toolsGopath == "") {
+		toolsGopath = process.env['GOPATH']
+	}
+
+	const defaultPath = path.join(toolsGopath, 'bin', 'ginkgo');
 
 	if (fs.existsSync(defaultPath)) {
 		return defaultPath;
