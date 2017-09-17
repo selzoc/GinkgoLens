@@ -45,8 +45,8 @@ async function getSpecsFromOutput(output: string, doc: vscode.TextDocument): Pro
 		const startLine = Number(specLines[i + 2].split(':')[1]);
 
 		specs.push({
-			fullSpecString: `${specLines[i]} ${specLines[i + 1]} ${specLines[i + 2].split(':')[0]}`,
-			location: new vscode.Location(doc.uri, doc.lineAt(startLine).range)
+			fullSpecString: `${specLines[i]} ${specLines[i + 1]}`,
+			location: new vscode.Location(doc.uri, doc.lineAt(startLine - 1).range)
 		});
 	}
 
