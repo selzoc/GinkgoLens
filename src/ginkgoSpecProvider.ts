@@ -42,8 +42,7 @@ async function getSpecsFromOutput(output: string, doc: vscode.TextDocument): Pro
 
 	const specs: Spec[] = [];
 	for (let i = 0; i < specLines.length; i += 3) {
-		const endLine = Number(specLines[i + 2].split(':')[1]);
-		const startLine = getStartLineFromEndLine(doc, endLine);
+		const startLine = Number(specLines[i + 2].split(':')[1]);
 
 		specs.push({
 			fullSpecString: `${specLines[i]} ${specLines[i + 1]} ${specLines[i + 2].split(':')[0]}`,
@@ -52,32 +51,6 @@ async function getSpecsFromOutput(output: string, doc: vscode.TextDocument): Pro
 	}
 
 	return specs;
-}
-
-function getStartLineFromEndLine(doc: vscode.TextDocument, endLine: number): number {
-	const c: string[] = [')', '}'];
-
-	for (let i = (endLine - 2); i >= 0; i--) {
-		const line = doc.lineAt(i).text;
-		for (let j = (line.length - 1); j >= 0; j--) {
-			if (line[j] === opp(c[c.length - 1])) {
-				c.pop();
-
-				if (c.length === 0) {
-					return i;
-				}
-			} else if (line[j] === ')' || line[j] === '}') {
-				c.push(line[j]);
-			}
-		}
-	}
-}
-
-function opp(c: string): string {
-	if (c === ')')
-		return '(';
-	if (c === '}')
-		return '{';
 }
 
 function ginkgoOutputFilter(line: string): boolean {
