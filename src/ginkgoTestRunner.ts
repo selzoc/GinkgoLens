@@ -21,13 +21,17 @@ export function runGinkgoTestsForFile(ginkgoLensConfig: vscode.WorkspaceConfigur
 			return
 		}
 
-		const doc = vscode.workspace.textDocuments.find((doc) => doc.uri.path == args.path);
+		const doc = vscode.workspace.textDocuments.find((doc) => {
+			return doc.uri.fsPath == args.path
+		});
 		if (doc.isDirty) {
 			vscode.window.showWarningMessage(DirtyFileMessage);
 			return
 		}
 
-		return ginkgoTest(ginkgoLensConfig, path.dirname(doc.fileName), args.path);
+		const fileName = path.basename(args.path)
+
+		return ginkgoTest(ginkgoLensConfig, path.dirname(doc.fileName), fileName);
 	}
 
 	console.log('oops no conditionals matched!')
@@ -96,7 +100,10 @@ export function getGinkgoPath(): string {
 		toolsGopath = process.env['GOPATH']
 	}
 
-	const defaultPath = path.join(toolsGopath, 'bin', 'ginkgo');
+	let defaultPath = path.join(toolsGopath, 'bin', 'ginkgo');
+	if (process.platform === "win32") {
+		defaultPath += '.exe'
+	}
 
 	if (fs.existsSync(defaultPath)) {
 		return defaultPath;
