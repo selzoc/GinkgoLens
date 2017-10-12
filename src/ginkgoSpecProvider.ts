@@ -24,9 +24,11 @@ export async function getTestSpecs(doc: vscode.TextDocument): Promise<Spec[]> {
 	}
 
 	const dir = path.dirname(doc.fileName);
+	const file = path.basename(doc.fileName);
+
 	const spawnedGinkgo = cp.spawnSync(
 		ginkgoRuntimePath,
-		['-regexScansFilePath', '-noisyPendings=false', '-noColor', '-dryRun', '-v', `-focus="${doc.fileName}"`],
+		['-regexScansFilePath', '-noisyPendings=false', '-noColor', '-dryRun', '-v', `-focus="${file}"`],
 		{ cwd: dir, shell: true }
 	);
 
@@ -41,12 +43,14 @@ async function getSpecsFromOutput(output: string, doc: vscode.TextDocument): Pro
 	const specLines = output.split('\n').filter(ginkgoOutputFilter).map(s => s.trim());
 
 	const specs: Spec[] = [];
-	for (let i = 0; i < specLines.length; i += 3) {
-		const endLine = Number(specLines[i + 2].split(':')[1]);
+	for (let i = 0; i < specLines.length - 1; i += 3) {
+		const fileLine = specLines[i + 2];
+		const lineNumberIndex = fileLine.lastIndexOf(':')
+		const endLine = Number(fileLine.substr(lineNumberIndex + 1));
 		const startLine = getStartLineFromEndLine(doc, endLine);
 
 		specs.push({
-			fullSpecString: `${specLines[i]} ${specLines[i + 1]} ${specLines[i + 2].split(':')[0]}`,
+			fullSpecString: `${specLines[i]} ${specLines[i + 1]} ${fileLine.substr(0, lineNumberIndex)}`,
 			location: new vscode.Location(doc.uri, doc.lineAt(startLine).range)
 		});
 	}
@@ -91,6 +95,7 @@ function ginkgoOutputFilter(line: string): boolean {
 		trimmed.startsWith('Ginkgo ran') ||
 		trimmed.startsWith('Test Suite') ||
 		trimmed.startsWith('•') ||
+		/^\+\s*/.test(trimmed) ||
 		/^Ran \d+ of \d+ Specs in/.test(trimmed) ||
 		/^S+$/.test(trimmed) ||
 		/^-+$/.test(trimmed) ||
